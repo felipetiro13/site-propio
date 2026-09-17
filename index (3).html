@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Felipe Oliveira — Engenharia de Software</title>
+<meta name="description" content="Felipe Oliveira — Estudante de Engenharia de Software no IBMEC, com interesse em tecnologia, desenvolvimento de software e mercado financeiro.">
+
+<!-- ===================================================================
+     FONTES
+     Duas famílias tipográficas do Google Fonts:
+     - "Fraunces": usada nos títulos (serifada, dá um tom mais maduro)
+     - "IBM Plex Sans": usada nos textos corridos (limpa, com cara de tech)
+     Se quiser trocar a fonte, troque o link abaixo E o valor das variáveis
+     --font-display / --font-body lá no CSS.
+=================================================================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* =====================================================================
+   1) VARIÁVEIS GLOBAIS — cores, fontes, espaçamentos
+   -----------------------------------------------------------------------
+   Quer mudar a paleta de cores do site? Mexa só aqui.
+   Quer trocar as fontes? Mexa nas variáveis --font-display / --font-body
+   (e lembre de trocar o link do Google Fonts lá em cima também).
+===================================================================== */
+:root{
+  /* --- cores de fundo --- */
+  --bg:            #0b0b0c;   /* fundo geral da página (preto levemente quente) */
+  --bg-alt:        #121214;   /* fundo de seções alternadas */
+  --surface:       #161618;   /* fundo de "cartões"/blocos */
+  --border:        #2b2b2e;   /* linhas e bordas discretas */
+  --border-soft:   #1e1e21;   /* bordas bem sutis */
+
+  /* --- cores de texto --- */
+  --text:          #f3f3f1;   /* texto principal (quase branco) */
+  --text-soft:     #a6a6ab;   /* texto secundário (cinza claro) */
+  --text-mute:     #6d6d72;   /* texto terciário / legendas */
+
+  /* --- acento (usado com moderação, sem cores vibrantes) --- */
+  --accent:        #cfcfc9;   /* cinza-claro quente, usado em detalhes e hover */
+
+  /* --- tipografia --- */
+  --font-display:  'Fraunces', 'Georgia', serif;
+  --font-body:     'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+
+  /* --- layout --- */
+  --max-width:     1180px;
+  --pad:           clamp(24px, 6vw, 64px);
+  --radius:        2px;
+}
+
+/* =====================================================================
+   2) RESET BÁSICO
+===================================================================== */
+*, *::before, *::after{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
+body{
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img{ max-width: 100%; display: block; }
+a{ color: inherit; text-decoration: none; }
+ul{ margin: 0; padding: 0; list-style: none; }
+button{ font-family: inherit; cursor: pointer; }
+
+/* respeita quem prefere menos animação */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior: auto; }
+  *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* foco visível para acessibilidade (navegação por teclado) */
+a:focus-visible, button:focus-visible{
+  outline: 1px solid var(--text);
+  outline-offset: 4px;
+}
+
+/* =====================================================================
+   3) UTILITÁRIOS DE LAYOUT
+===================================================================== */
+.wrap{
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding-left: var(--pad);
+  padding-right: var(--pad);
+}
+.section{
+  padding: clamp(72px, 12vw, 140px) 0;
+  border-top: 1px solid var(--border-soft);
+}
+.section--alt{ background: var(--bg-alt); }
+
+.eyebrow{
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-mute);
+  margin-bottom: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.eyebrow .num{ color: var(--text-soft); }
+
+.section-title{
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  max-width: 16ch;
+  margin: 0 0 28px;
+}
+
+.lede{
+  font-size: clamp(16px, 1.6vw, 18px);
+  color: var(--text-soft);
+  max-width: 62ch;
+  margin: 0 0 16px;
+}
+
+/* reveal ao rolar a página — ver JS na seção 8 */
+.reveal{
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.is-visible{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =====================================================================
+   4) CABEÇALHO / NAVEGAÇÃO
+===================================================================== */
+.header{
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(11,11,12,0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-soft);
+}
+.header__row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+.header__name{
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.01em;
+}
+.nav{
+  display: flex;
+  gap: 32px;
+}
+.nav a{
+  font-size: 14px;
+  color: var(--text-soft);
+  position: relative;
+  padding: 4px 0;
+  transition: color 0.25s ease;
+}
+.nav a:hover{ color: var(--text); }
+.nav a::after{
+  content: '';
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 0%; height: 1px;
+  background: var(--text);
+  transition: width 0.25s ease;
+}
+.nav a:hover::after{ width: 100%; }
+
+/* botão do menu mobile (hamburguer) */
+.menu-btn{
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 8px;
+}
+.menu-btn span{
+  width: 22px; height: 1px;
+  background: var(--text);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.menu-btn.is-open span:nth-child(1){ transform: translateY(6px) rotate(45deg); }
+.menu-btn.is-open span:nth-child(2){ opacity: 0; }
+.menu-btn.is-open span:nth-child(3){ transform: translateY(-6px) rotate(-45deg); }
+
+@media (max-width: 780px){
+  .nav{
+    position: fixed;
+    top: 72px; left: 0; right: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border-soft);
+    flex-direction: column;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+  .nav.is-open{ max-height: 400px; }
+  .nav a{
+    padding: 16px var(--pad);
+    border-top: 1px solid var(--border-soft);
+    width: 100%;
+  }
+  .menu-btn{ display: flex; }
+}
+
+/* =====================================================================
+   5) HERO
+===================================================================== */
+.hero{
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 72px;
+  position: relative;
+}
+.hero__grid{
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: clamp(40px, 6vw, 100px);
+  align-items: end;
+  width: 100%;
+  padding-top: 80px;
+  padding-bottom: 60px;
+}
+.hero__kicker{
+  font-size: 13px;
+  color: var(--text-mute);
+  letter-spacing: 0.03em;
+  margin-bottom: 20px;
+}
+.hero h1{
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(48px, 8vw, 92px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0 0 24px;
+}
+.hero__tagline{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(19px, 2.2vw, 24px);
+  color: var(--text-soft);
+  max-width: 34ch;
+  margin: 0 0 20px;
+  line-height: 1.4;
+}
+.hero__desc{
+  color: var(--text-soft);
+  font-size: 16px;
+  max-width: 46ch;
+  margin: 0 0 40px;
+}
+.hero__actions{
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 28px;
+  font-size: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+.btn:hover{ transform: translateY(-1px); }
+.btn--primary{
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.btn--primary:hover{ background: var(--accent); border-color: var(--accent); }
+.btn--ghost{
+  color: var(--text);
+  background: transparent;
+}
+.btn--ghost:hover{ border-color: var(--text-soft); }
+
+/* índice lateral do hero — lista as seções, como um sumário */
+.hero__index{
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+.hero__index a{
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+  color: var(--text-soft);
+  transition: color 0.25s ease, padding-left 0.25s ease;
+}
+.hero__index a:hover{
+  color: var(--text);
+  padding-left: 6px;
+}
+.hero__index .idx-num{
+  font-size: 12px;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px){
+  .hero__grid{ grid-template-columns: 1fr; }
+  .hero__index{ display: none; } /* simplifica no mobile */
+}
+
+/* =====================================================================
+   6) SOBRE MIM
+===================================================================== */
+.about__grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 6vw, 90px);
+  align-items: start;
+}
+.about__facts{
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--border-soft);
+}
+.fact{
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+}
+.fact__label{ color: var(--text-mute); }
+.fact__value{ color: var(--text); text-align: right; }
+
+@media (max-width: 780px){
+  .about__grid{ grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   7) CONHECIMENTOS E PROJETOS
+===================================================================== */
+.skills-list{
+  border-top: 1px solid var(--border-soft);
+}
+.skill-row{
+  display: grid;
+  grid-template-columns: 1fr 2.2fr;
+  gap: 24px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.skill-row__title{
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+}
+.skill-row__desc{
+  color: var(--text-soft);
+  font-size: 15px;
+  max-width: 56ch;
+}
+@media (max-width: 700px){
+  .skill-row{ grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* =====================================================================
+   8) OBJETIVOS PROFISSIONAIS
+===================================================================== */
+.goals__grid{
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: clamp(32px, 6vw, 90px);
+  align-items: start;
+}
+.chip-list{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chip{
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-soft);
+  border-radius: var(--radius);
+}
+@media (max-width: 780px){
+  .goals__grid{ grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   9) ÁREAS DE INTERESSE
+===================================================================== */
+.interest-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--border-soft);
+  border-left: 1px solid var(--border-soft);
+}
+.interest-cell{
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  padding: clamp(28px, 4vw, 44px) clamp(20px, 3vw, 32px);
+  min-height: 140px;
+  display: flex;
+  align-items: flex-end;
+  transition: background 0.3s ease;
+}
+.interest-cell:hover{ background: var(--surface); }
+.interest-cell span{
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.2;
+}
+@media (max-width: 780px){
+  .interest-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px){
+  .interest-grid{ grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   10) PERFIL PROFISSIONAL
+===================================================================== */
+.profile-block{
+  max-width: 780px;
+}
+.profile-block p{
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(21px, 2.6vw, 28px);
+  line-height: 1.5;
+  color: var(--text);
+}
+.profile-block p + p{ margin-top: 24px; }
+
+/* =====================================================================
+   11) CONTATO
+===================================================================== */
+.contact{
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: clamp(32px, 6vw, 90px);
+  align-items: end;
+}
+.contact__name{
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 44px);
+  margin: 0 0 10px;
+}
+.contact__phone{
+  color: var(--text-soft);
+  font-size: 16px;
+  margin: 0 0 32px;
+}
+.contact__actions{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 24px;
+}
+.contact__link{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 15px;
+  transition: padding-left 0.25s ease, color 0.25s ease;
+}
+.contact__link:hover{ padding-left: 6px; color: var(--accent); }
+.contact__link .arrow{ color: var(--text-mute); transition: transform 0.25s ease; }
+.contact__link:hover .arrow{ transform: translateX(4px); }
+
+@media (max-width: 780px){
+  .contact{ grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   12) RODAPÉ
+===================================================================== */
+.footer{
+  padding: 32px 0 40px;
+  border-top: 1px solid var(--border-soft);
+}
+.footer__row{
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+</style>
+</head>
+<body>
+
+<!-- =====================================================================
+     CABEÇALHO / MENU
+     Para mudar os itens do menu, edite os links <a href="#id"> abaixo
+     e as seções correspondentes mais para baixo no HTML.
+===================================================================== -->
+<header class="header">
+  <div class="wrap header__row">
+    <!-- EDITE AQUI: seu nome no cabeçalho -->
+    <a href="#top" class="header__name">Felipe Oliveira</a>
+
+    <nav class="nav" id="nav">
+      <a href="#sobre">Sobre</a>
+      <a href="#conhecimentos">Conhecimentos</a>
+      <a href="#objetivos">Objetivos</a>
+      <a href="#interesses">Interesses</a>
+      <a href="#contato">Contato</a>
+    </nav>
+
+    <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- =====================================================================
+     HERO
+===================================================================== -->
+<section class="hero" id="top">
+  <div class="wrap hero__grid">
+    <div>
+      <div class="hero__kicker">Engenharia de Software — IBMEC</div>
+
+      <!-- EDITE AQUI: seu nome -->
+      <h1>Felipe<br>Oliveira</h1>
+
+      <!-- EDITE AQUI: frase de efeito -->
+      <p class="hero__tagline">Construindo, linha por linha, uma base sólida entre tecnologia, software e negócios.</p>
+
+      <!-- EDITE AQUI: descrição curta -->
+      <p class="hero__desc">Estudante de Engenharia de Software dedicado a aprender e aplicar tecnologia na criação de soluções digitais, com interesse particular na interseção entre inovação e mercado financeiro.</p>
+
+      <div class="hero__actions">
+        <a href="#sobre" class="btn btn--primary">Sobre mim</a>
+        <a href="#contato" class="btn btn--ghost">Contato</a>
+      </div>
+    </div>
+
+    <!-- índice lateral: some no celular para simplificar -->
+    <nav class="hero__index" aria-label="Índice de seções">
+      <a href="#sobre"><span class="idx-num">01</span> Sobre mim</a>
+      <a href="#conhecimentos"><span class="idx-num">02</span> Conhecimentos e projetos</a>
+      <a href="#objetivos"><span class="idx-num">03</span> Objetivos profissionais</a>
+      <a href="#interesses"><span class="idx-num">04</span> Áreas de interesse</a>
+      <a href="#contato"><span class="idx-num">05</span> Contato</a>
+    </nav>
+  </div>
+</section>
+
+<!-- =====================================================================
+     01 — SOBRE MIM
+===================================================================== -->
+<section class="section" id="sobre">
+  <div class="wrap">
+    <div class="eyebrow"><span class="num">01</span> Sobre mim</div>
+    <div class="about__grid">
+      <div class="reveal">
+        <h2 class="section-title">Formação em construção, direção definida.</h2>
+        <!-- EDITE AQUI: texto sobre você -->
+        <p class="lede">Sou estudante de Engenharia de Software no IBMEC, onde venho desenvolvendo os fundamentos técnicos e o raciocínio necessários para transformar problemas reais em soluções digitais.</p>
+        <p class="lede">Ao longo da formação, tenho me dedicado a entender não só a lógica por trás do código, mas também o contexto de uso de cada solução — unindo programação, análise de usabilidade e visão de produto em um mesmo processo de aprendizado. É uma base que pretendo aprofundar continuamente, com disciplina e curiosidade, ao longo de toda a minha trajetória profissional.</p>
+      </div>
+      <div class="about__facts reveal">
+        <div class="fact"><span class="fact__label">Formação</span><span class="fact__value">Engenharia de Software — IBMEC</span></div>
+        <div class="fact"><span class="fact__label">Foco atual</span><span class="fact__value">Programação e desenvolvimento de soluções</span></div>
+        <div class="fact"><span class="fact__label">Direção</span><span class="fact__value">Tecnologia &amp; mercado financeiro</span></div>
+        <div class="fact"><span class="fact__label">Localização</span><span class="fact__value">São Paulo, SP</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     02 — CONHECIMENTOS E PROJETOS
+     Para adicionar ou remover um item, copie/apague um bloco
+     <div class="skill-row">...</div> inteiro.
+===================================================================== -->
+<section class="section section--alt" id="conhecimentos">
+  <div class="wrap">
+    <div class="eyebrow"><span class="num">02</span> Conhecimentos e projetos</div>
+    <h2 class="section-title reveal">O que venho praticando até aqui.</h2>
+    <p class="lede reveal" style="margin-bottom:48px;">Conhecimentos construídos em sala de aula e em projetos de formação, que sustentam minha entrada no universo do desenvolvimento de software.</p>
+
+    <div class="skills-list reveal">
+      <div class="skill-row">
+        <div class="skill-row__title">Programação em C</div>
+        <div class="skill-row__desc">Fundamentos de lógica de programação e estruturação de algoritmos, base para o entendimento de outras linguagens e paradigmas.</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-row__title">Desenvolvimento de sites</div>
+        <div class="skill-row__desc">Projetos de construção de páginas web, aplicando estrutura, estilo e organização de conteúdo de forma prática.</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-row__title">Desenvolvimento de jogos</div>
+        <div class="skill-row__desc">Experiências de criação de jogos como exercício de lógica, design de interação e resolução de problemas.</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-row__title">Análise de usabilidade</div>
+        <div class="skill-row__desc">Investigação das reais necessidades dos usuários e identificação de pontos de fricção em sites e aplicativos, com foco em propor melhorias concretas de usabilidade e organização.</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-row__title">Criação de personas</div>
+        <div class="skill-row__desc">Construção de perfis de usuário como ferramenta para orientar decisões de produto centradas em pessoas reais.</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-row__title">Desenvolvimento de soluções</div>
+        <div class="skill-row__desc">Aplicação combinada desses conhecimentos na estruturação de pequenas soluções tecnológicas, do problema à entrega.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     03 — OBJETIVOS PROFISSIONAIS
+===================================================================== -->
+<section class="section" id="objetivos">
+  <div class="wrap">
+    <div class="eyebrow"><span class="num">03</span> Objetivos profissionais</div>
+    <div class="goals__grid">
+      <div class="reveal">
+        <h2 class="section-title">Uma carreira construída com consistência.</h2>
+        <!-- EDITE AQUI: texto de objetivos -->
+        <p class="lede">Meu objetivo é consolidar uma carreira sólida em tecnologia, aprofundando continuamente meus conhecimentos técnicos e participando de projetos que gerem impacto real para pessoas e negócios.</p>
+        <p class="lede">Tenho interesse particular em ambientes onde tecnologia, dados e inovação se conectam diretamente com decisões de negócio — o que me aproxima tanto de empresas digitais quanto do mercado financeiro, dois universos que pretendo explorar ao longo da minha trajetória.</p>
+      </div>
+      <div class="reveal">
+        <div class="chip-list">
+          <span class="chip">Desenvolvimento de software</span>
+          <span class="chip">Aplicações e produtos digitais</span>
+          <span class="chip">Empresas de tecnologia</span>
+          <span class="chip">Empresas digitais</span>
+          <span class="chip">Inovação</span>
+          <span class="chip">Tecnologia aplicada a negócios</span>
+          <span class="chip">Mercado financeiro</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     04 — ÁREAS DE INTERESSE
+===================================================================== -->
+<section class="section section--alt" id="interesses">
+  <div class="wrap">
+    <div class="eyebrow"><span class="num">04</span> Áreas de interesse</div>
+    <h2 class="section-title reveal">Onde quero direcionar minha energia.</h2>
+  </div>
+  <div class="wrap" style="padding-top:8px;">
+    <div class="interest-grid reveal">
+      <div class="interest-cell"><span>Tecnologia</span></div>
+      <div class="interest-cell"><span>Engenharia de<br>Software</span></div>
+      <div class="interest-cell"><span>Desenvolvimento<br>de Software</span></div>
+      <div class="interest-cell"><span>Produtos Digitais</span></div>
+      <div class="interest-cell"><span>Inovação</span></div>
+      <div class="interest-cell"><span>Mercado Financeiro</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     05 — CONTATO
+     EDITE AQUI: telefone. O link de WhatsApp usa o número no formato
+     internacional (55 + DDD + número, sem espaços ou símbolos).
+===================================================================== -->
+<section class="section section--alt" id="contato">
+  <div class="wrap">
+    <div class="eyebrow"><span class="num">05</span> Contato</div>
+    <div class="contact">
+      <div class="reveal">
+        <h2 class="section-title" style="max-width:20ch;">Vamos conversar sobre a próxima oportunidade.</h2>
+        <p class="lede">Estou aberto a conversas, projetos e oportunidades que conectem tecnologia, desenvolvimento de software e mercado financeiro.</p>
+      </div>
+      <div class="reveal">
+        <p class="contact__name">Felipe Oliveira</p>
+        <!-- EDITE AQUI: telefone exibido na tela -->
+        <p class="contact__phone">(11) 99164-4108</p>
+
+        <div class="contact__actions">
+          <!-- EDITE AQUI: número no link do WhatsApp (formato 55DDDNUMERO) -->
+          <a class="contact__link" href="https://wa.me/5511991644108" target="_blank" rel="noopener">
+            Conversar pelo WhatsApp <span class="arrow">→</span>
+          </a>
+          <a class="contact__link" href="tel:+5511991644108">
+            Ligar agora <span class="arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     RODAPÉ
+===================================================================== -->
+<footer class="footer">
+  <div class="wrap footer__row">
+    <span>Felipe Oliveira — Engenharia de Software</span>
+    <span id="year"></span>
+  </div>
+</footer>
+
+<!-- =====================================================================
+     JAVASCRIPT
+     1) Menu mobile (abre/fecha)
+     2) Fecha o menu ao clicar em um link
+     3) Header muda de aparência ao rolar (sutil)
+     4) Animação de "reveal" das seções ao entrar na tela
+     5) Ano automático no rodapé
+===================================================================== -->
+<script>
+  // ---- 1) Menu mobile ----
+  const menuBtn = document.getElementById('menuBtn');
+  const nav = document.getElementById('nav');
+
+  menuBtn.addEventListener('click', () => {
+    const isOpen = nav.classList.toggle('is-open');
+    menuBtn.classList.toggle('is-open', isOpen);
+    menuBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  // ---- 2) Fecha o menu ao clicar em um link (útil no celular) ----
+  nav.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      nav.classList.remove('is-open');
+      menuBtn.classList.remove('is-open');
+      menuBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // ---- 3) e ---- 4) Reveal ao rolar a página ----
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target); // anima só uma vez
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealEls.forEach(el => observer.observe(el));
+
+  // ---- 5) Ano automático no rodapé ----
+  document.getElementById('year').textContent = '© ' + new Date().getFullYear();
+</script>
+
+</body>
+</html>
